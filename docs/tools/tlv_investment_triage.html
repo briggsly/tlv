@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TLV Investment Triage</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --tlv-navy: #0d2340;
+    --tlv-navy-light: #1a3a5f;
+    --tlv-blue: #4a90d9;
+    --tlv-blue-light: #d6e7f7;
+    --tlv-gold: #f0b323;
+    --tlv-gold-light: #fde9b3;
+    --tlv-bg: #f5f7fa;
+    --tlv-gray-100: #f1f3f5;
+    --tlv-gray-200: #e4e7eb;
+    --tlv-gray-300: #cbd2d9;
+    --tlv-gray-400: #9aa5b1;
+    --tlv-gray-500: #7b8794;
+    --tlv-gray-700: #3e4c59;
+    --tlv-gray-900: #1f2933;
+    --tlv-success: #2e7d32;
+    --tlv-success-light: #e8f5e9;
+    --tlv-warning: #b25d04;
+    --tlv-warning-light: #fff4e5;
+    --tlv-danger: #c62828;
+    --tlv-danger-light: #ffebee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--tlv-bg);
+    color: var(--tlv-gray-900);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  header {
+    background: var(--tlv-navy);
+    color: white;
+    padding: 1rem 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid var(--tlv-gold);
+  }
+  header .brand { display: flex; align-items: center; gap: 0.75rem; }
+  header .logo {
+    font-weight: 800;
+    font-size: 1.1rem;
+    background: var(--tlv-gold);
+    color: var(--tlv-navy);
+    padding: 0.25rem 0.6rem;
+    letter-spacing: 0.05em;
+    border-radius: 2px;
+  }
+  header h1 { margin: 0; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.02em; }
+  header .subtitle { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
+  header .meta { font-size: 0.75rem; opacity: 0.7; text-align: right; }
+
+  .container {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem;
+    max-width: 1700px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) { .container { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- Form ---------- */
+  .form-panel {
+    background: white;
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    height: fit-content;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  @media (max-width: 1100px) {
+    .form-panel { position: static; max-height: none; }
+  }
+  .form-section { border-top: 1px solid var(--tlv-gray-200); padding: 0.85rem 0; }
+  .form-section:first-child { border-top: none; padding-top: 0; }
+  .form-section h3 {
+    margin: 0 0 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tlv-navy);
+  }
+  .field { margin-bottom: 0.6rem; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--tlv-gray-700);
+    margin-bottom: 0.2rem;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--tlv-gray-300);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: white;
+    color: var(--tlv-gray-900);
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--tlv-blue);
+    box-shadow: 0 0 0 3px rgba(74,144,217,0.15);
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .field-row .field { margin-bottom: 0; }
+  .radio-group { display: flex; gap: 0.4rem; }
+  .radio-group label {
+    flex: 1;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--tlv-gray-300);
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.78rem;
+    background: white;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .radio-group input[type="radio"] { display: none; }
+  .radio-group input[type="radio"]:checked + label {
+    background: var(--tlv-navy);
+    color: white;
+    border-color: var(--tlv-navy);
+  }
+  .actions { display: flex; gap: 0.4rem; margin-top: 1rem; flex-wrap: wrap; }
+  .btn {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--tlv-navy);
+    border-radius: 4px;
+    background: white;
+    color: var(--tlv-navy);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: inherit;
+  }
+  .btn:hover { background: var(--tlv-navy); color: white; }
+  .btn.primary { background: var(--tlv-navy); color: white; }
+  .btn.primary:hover { background: var(--tlv-navy-light); }
+  .btn.ghost { border-color: var(--tlv-gray-300); color: var(--tlv-gray-700); }
+  .preset-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .preset-row .btn { font-size: 0.7rem; padding: 0.3rem 0.5rem; }
+
+  /* ---------- Viz panel ---------- */
+  .viz-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+  .card {
+    background: white;
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .card h2 {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+    color: var(--tlv-navy);
+    font-weight: 600;
+  }
+  .card .card-subtitle {
+    font-size: 0.78rem;
+    color: var(--tlv-gray-500);
+    margin-bottom: 1.1rem;
+  }
+
+  /* ---------- DQ banner ---------- */
+  .dq-banner {
+    background: var(--tlv-danger-light);
+    border: 2px solid var(--tlv-danger);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+  }
+  .dq-banner h2 {
+    margin: 0 0 0.35rem;
+    color: var(--tlv-danger);
+    font-size: 1.05rem;
+  }
+  .dq-banner p { margin: 0; color: var(--tlv-gray-900); }
+
+  /* ---------- Mermaid tree ---------- */
+  .tree-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: var(--tlv-gray-100);
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 260px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .tree-container svg {
+    max-width: 100%;
+    height: auto !important;
+  }
+  .tree-empty {
+    color: var(--tlv-gray-400);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+  }
+  .tree-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.7rem;
+    font-size: 0.72rem;
+    color: var(--tlv-gray-700);
+  }
+  .legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .legend-chip .swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* ---------- Matrix ---------- */
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .matrix-table th, .matrix-table td {
+    padding: 0.55rem 0.5rem;
+    text-align: center;
+    border: 1px solid var(--tlv-gray-200);
+  }
+  .matrix-table thead th {
+    background: var(--tlv-gray-100);
+    font-weight: 600;
+    color: var(--tlv-gray-700);
+    font-size: 0.78rem;
+  }
+  .matrix-table th.row-label { text-align: left; background: white; }
+  .matrix-table td.row-label {
+    text-align: left;
+    font-weight: 600;
+    background: var(--tlv-gray-100);
+    color: var(--tlv-gray-700);
+  }
+  .matrix-table .col-active { background: var(--tlv-blue-light) !important; }
+  .matrix-table thead th.col-active {
+    background: var(--tlv-navy) !important;
+    color: white;
+  }
+  .cell-pursue { background: rgba(46,125,50,0.18); color: var(--tlv-success); font-weight: 700; }
+  .cell-selective { background: rgba(178,93,4,0.12); color: var(--tlv-warning); font-weight: 600; }
+  .cell-hold { color: var(--tlv-gray-300); }
+  .matrix-table td.gate-failed {
+    background: var(--tlv-danger-light) !important;
+    color: var(--tlv-danger);
+    font-weight: 700;
+  }
+  .matrix-legend {
+    margin-top: 0.7rem;
+    font-size: 0.72rem;
+    color: var(--tlv-gray-500);
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .matrix-legend span strong { color: var(--tlv-gray-700); }
+
+  /* ---------- 2x2 ---------- */
+  .quad-section {
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem 0;
+  }
+  .quad-frame {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 22px;
+    gap: 4px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .quad-y-label {
+    grid-column: 1; grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .quad-y-label span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--tlv-gray-500);
+    white-space: nowrap;
+  }
+  .quad-x-label {
+    grid-column: 2; grid-row: 2;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--tlv-gray-500);
+    align-self: center;
+  }
+  .quad-container {
+    grid-column: 2; grid-row: 1;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    background: var(--tlv-gray-200);
+    border: 1px solid var(--tlv-gray-300);
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+  }
+  .quad-cell {
+    background: white;
+    padding: 0.55rem 0.5rem;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .quad-cell.q-strong { background: rgba(46,125,50,0.08); }
+  .quad-cell.q-import { background: rgba(74,144,217,0.08); }
+  .quad-cell.q-diversify { background: rgba(240,179,35,0.12); }
+  .quad-cell.q-avoid { background: rgba(198,40,40,0.06); }
+  .quad-cell .q-title {
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--tlv-navy);
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
+  }
+  .quad-cell .q-desc {
+    font-size: 0.62rem;
+    color: var(--tlv-gray-500);
+    line-height: 1.3;
+  }
+  .quad-cell.active {
+    box-shadow: inset 0 0 0 3px var(--tlv-gold);
+    background-color: rgba(240,179,35,0.18);
+  }
+  .quad-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: var(--tlv-navy);
+    border: 2px solid var(--tlv-gold);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.35s ease;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+
+  /* ---------- Scores ---------- */
+  .scores { margin-top: 1rem; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+  .score-label {
+    width: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--tlv-gray-700);
+  }
+  .score-bar {
+    flex: 1;
+    height: 14px;
+    background: var(--tlv-gray-200);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.3s ease;
+    background: var(--tlv-gray-400);
+  }
+  .score-fill.high { background: var(--tlv-success); }
+  .score-fill.low { background: var(--tlv-warning); }
+  .score-value {
+    width: 40px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--tlv-navy);
+  }
+  .score-value small { color: var(--tlv-gray-400); font-weight: 400; }
+  .quadrant-label {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--tlv-gray-100);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--tlv-gray-700);
+    text-align: center;
+  }
+  .quadrant-label strong { color: var(--tlv-navy); }
+
+  /* ---------- Recommendations ---------- */
+  .recs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+    gap: 0.65rem;
+  }
+  .rec-card {
+    border: 1px solid var(--tlv-gray-200);
+    border-radius: 6px;
+    padding: 0.8rem 0.9rem;
+    background: white;
+    min-width: 0;
+  }
+  .rec-card.status-pursue {
+    border-color: var(--tlv-success);
+    background: var(--tlv-success-light);
+  }
+  .rec-card.status-selective {
+    border-color: var(--tlv-warning);
+    background: var(--tlv-warning-light);
+  }
+  .rec-card.status-hold { opacity: 0.55; }
+  .rec-card.status-gate {
+    border-color: var(--tlv-danger);
+    background: var(--tlv-danger-light);
+  }
+  .rec-card h4 {
+    margin: 0 0 0.15rem;
+    font-size: 0.92rem;
+    color: var(--tlv-navy);
+  }
+  .rec-card .rec-status {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+  }
+  .status-pursue .rec-status { color: var(--tlv-success); }
+  .status-selective .rec-status { color: var(--tlv-warning); }
+  .status-gate .rec-status { color: var(--tlv-danger); }
+  .status-hold .rec-status { color: var(--tlv-gray-500); }
+  .rec-card .rec-detail {
+    font-size: 0.78rem;
+    color: var(--tlv-gray-700);
+    line-height: 1.4;
+  }
+  .gate-note {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--tlv-danger);
+    font-size: 0.74rem;
+    color: var(--tlv-danger);
+    font-weight: 500;
+  }
+
+  /* ---------- Flags ---------- */
+  .flags {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--tlv-gray-100);
+    border-left: 3px solid var(--tlv-gold);
+    border-radius: 4px;
+  }
+  .flags-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--tlv-navy);
+    margin-bottom: 0.4rem;
+  }
+  .flags ul { margin: 0; padding-left: 1.2rem; }
+  .flags li { margin-bottom: 0.3rem; font-size: 0.8rem; line-height: 1.45; }
+  .flags li:last-child { margin-bottom: 0; }
+
+  .empty {
+    text-align: center;
+    color: var(--tlv-gray-400);
+    padding: 1.5rem;
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  @media print {
+    .form-panel, .actions { display: none; }
+    .container { grid-template-columns: 1fr; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    header { background: white; color: black; border-bottom: 2px solid #000; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="logo">TLV</span>
+    <div>
+      <h1>Investment Triage</h1>
+      <div class="subtitle">Place-based capital deployment · decision tree</div>
+    </div>
+  </div>
+  <div class="meta">Internal use · v1.2<br>Per TLV Thesis (May 2026)</div>
+</header>
+
+<div class="container">
+
+  <!-- ===== Form panel ===== -->
+  <aside class="form-panel">
+
+    <div class="form-section">
+      <h3>1. Company</h3>
+      <div class="field">
+        <label>Company name</label>
+        <input type="text" id="company_name" placeholder="e.g. Acme Robotics">
+      </div>
+      <div class="field">
+        <label>Sector</label>
+        <select id="sector">
+          <option value="">— Select —</option>
+          <optgroup label="High-relatedness to Tulsa">
+            <option value="b2b_saas">B2B SaaS</option>
+            <option value="energy">Energy / Cleantech</option>
+            <option value="manufacturing">Advanced Manufacturing / Aerospace</option>
+            <option value="health">Health-tech / Virtual Health</option>
+            <option value="ai">AI / Data Infrastructure</option>
+            <option value="fintech">Fintech (underserved)</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="consumer">Consumer / DTC</option>
+            <option value="proptech">Real Estate / Proptech</option>
+            <option value="edtech">Edtech</option>
+            <option value="other">Other</option>
+          </optgroup>
+          <optgroup label="Excluded">
+            <option value="cannabis">Cannabis</option>
+            <option value="gambling">Gambling</option>
+            <option value="firearms">Firearms</option>
+            <option value="adult">Adult content</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field">
+        <label>Publicly traded?</label>
+        <div class="radio-group">
+          <input type="radio" name="public" id="public_yes" value="yes"><label for="public_yes">Yes</label>
+          <input type="radio" name="public" id="public_no" value="no" checked><label for="public_no">No</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Traditional PE / buyout deal?</label>
+        <div class="radio-group">
+          <input type="radio" name="pe" id="pe_yes" value="yes"><label for="pe_yes">Yes</label>
+          <input type="radio" name="pe" id="pe_no" value="no" checked><label for="pe_no">No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>2. Stage &amp; Round</h3>
+      <div class="field">
+        <label>Stage</label>
+        <select id="stage">
+          <option value="">— Select —</option>
+          <option value="preseed">Pre-Seed</option>
+          <option value="seed">Seed</option>
+          <option value="seriesA">Series A</option>
+          <option value="seriesB">Series B</option>
+          <option value="growth">Series C+ (Growth)</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Round size ($)</label>
+          <input type="number" id="round_size" placeholder="2000000" min="0" step="50000">
+        </div>
+        <div class="field">
+          <label>Pre-money ($)</label>
+          <input type="number" id="valuation" placeholder="15000000" min="0" step="100000">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>3. Tulsa Connection</h3>
+      <div class="field">
+        <label>HQ location</label>
+        <select id="hq_location">
+          <option value="">— Select —</option>
+          <option value="tulsa">Tulsa</option>
+          <option value="oklahoma">Oklahoma (non-Tulsa)</option>
+          <option value="us">Other US</option>
+          <option value="intl">International</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Founder(s) primary location</label>
+        <select id="founder_location">
+          <option value="">— Select —</option>
+          <option value="tulsa">Tulsa</option>
+          <option value="oklahoma">Oklahoma (non-Tulsa)</option>
+          <option value="us">Other US</option>
+          <option value="intl">International</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Tulsa employees</label>
+          <input type="number" id="tulsa_emp" placeholder="0" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Total employees</label>
+          <input type="number" id="total_emp" placeholder="0" min="0" step="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Planned Tulsa hires (12mo)</label>
+          <input type="number" id="planned_hires" placeholder="0" min="0" step="1">
+        </div>
+        <div class="field">
+          <label>Years in Tulsa</label>
+          <input type="number" id="years_tulsa" placeholder="0" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="field">
+        <label>Concrete Tulsa relocation/expansion commitment?</label>
+        <div class="radio-group">
+          <input type="radio" name="reloc" id="reloc_yes" value="yes"><label for="reloc_yes">Yes</label>
+          <input type="radio" name="reloc" id="reloc_no" value="no" checked><label for="reloc_no">No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>4. Compensation Quality</h3>
+      <div class="field">
+        <label>Avg salary, Tulsa roles ($/yr)</label>
+        <input type="number" id="avg_salary" placeholder="85000" min="0" step="1000">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>5. Equity Gate</h3>
+      <div class="field">
+        <label>Lead investor identified?</label>
+        <div class="radio-group">
+          <input type="radio" name="lead" id="lead_yes" value="yes"><label for="lead_yes">Yes</label>
+          <input type="radio" name="lead" id="lead_no" value="no" checked><label for="lead_no">No</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Lead investor type</label>
+        <select id="lead_type">
+          <option value="none">— None / TBD —</option>
+          <option value="angel">Sophisticated angel</option>
+          <option value="vc">Institutional VC</option>
+          <option value="strategic">Strategic / Corporate VC</option>
+          <option value="other">Other (unsophisticated)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Real diligence + writing term sheet?</label>
+        <div class="radio-group">
+          <input type="radio" name="termsheet" id="ts_yes" value="yes"><label for="ts_yes">Yes</label>
+          <input type="radio" name="termsheet" id="ts_no" value="no" checked><label for="ts_no">No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" onclick="exportJSON()">Export JSON</button>
+      <button class="btn" onclick="window.print()">Print</button>
+      <button class="btn ghost" onclick="resetForm()">Reset</button>
+    </div>
+
+    <div class="form-section" style="border-top: 1px solid var(--tlv-gray-200); margin-top: 0.5rem;">
+      <h3>Load preset (test)</h3>
+      <div class="preset-row">
+        <button class="btn ghost" onclick="loadPreset('dockware')">Dockware</button>
+        <button class="btn ghost" onclick="loadPreset('crusoe')">Crusoe</button>
+        <button class="btn ghost" onclick="loadPreset('medefy')">Medefy</button>
+        <button class="btn ghost" onclick="loadPreset('thistle')">Thistle</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ===== Visualization panel ===== -->
+  <main class="viz-panel">
+
+    <div id="dq_banner" class="dq-banner" style="display:none;">
+      <h2>⛔ Outside TLV Scope</h2>
+      <p id="dq_reason"></p>
+    </div>
+
+    <!-- Decision tree -->
+    <div class="card">
+      <h2>Decision Tree</h2>
+      <div class="card-subtitle">Live path: Company → Stage → Buckets → Lead Gate. Active path highlighted; non-pursued buckets dimmed.</div>
+      <div id="tree" class="tree-container">
+        <div class="tree-empty">Pick a stage to render the decision path…</div>
+      </div>
+      <div class="tree-legend">
+        <span class="legend-chip"><span class="swatch" style="background:#0d2340; border-color:#f0b323;"></span> Active decision</span>
+        <span class="legend-chip"><span class="swatch" style="background:#2e7d32;"></span> Pursue</span>
+        <span class="legend-chip"><span class="swatch" style="background:#b25d04;"></span> Selective</span>
+        <span class="legend-chip"><span class="swatch" style="background:#fde9b3; border-color:#f0b323;"></span> Gate check</span>
+        <span class="legend-chip"><span class="swatch" style="background:#c62828;"></span> Reject / fail</span>
+        <span class="legend-chip"><span class="swatch" style="background:#f8f9fa; border-color:#cbd2d9;"></span> Inactive / hold</span>
+      </div>
+    </div>
+
+    <!-- Stage matrix -->
+    <div class="card">
+      <h2>Stage × Bucket Matrix</h2>
+      <div class="card-subtitle">Active stage column highlights as you fill the form. Per TLV Thesis (May 2026), slide 10.</div>
+      <table class="matrix-table" id="matrix">
+        <thead>
+          <tr>
+            <th class="row-label"></th>
+            <th data-stage="preseed">Pre-Seed<br><span style="font-weight:400; font-size: 0.7rem; color: var(--tlv-gray-500);">Enable, Don't Invest</span></th>
+            <th data-stage="seed">Seed<br><span style="font-weight:400; font-size: 0.7rem; color: var(--tlv-gray-500);">Catalyze &amp; Capture</span></th>
+            <th data-stage="seriesA">Series A &amp; B<br><span style="font-weight:400; font-size: 0.7rem; color: var(--tlv-gray-500);">Lean Into Local Success</span></th>
+            <th data-stage="growth">Growth (C+)<br><span style="font-weight:400; font-size: 0.7rem; color: var(--tlv-gray-500);">Opportunistic &amp; Selective</span></th>
+          </tr>
+          <tr>
+            <th class="row-label">Check size</th>
+            <th data-stage="preseed" style="font-weight: 400;">$100K–$300K</th>
+            <th data-stage="seed" style="font-weight: 400;">$500K–$1M</th>
+            <th data-stage="seriesA" style="font-weight: 400;">$1M–$3M</th>
+            <th data-stage="growth" style="font-weight: 400;">$3M+</th>
+          </tr>
+        </thead>
+        <tbody id="matrix_body"></tbody>
+      </table>
+      <div class="matrix-legend">
+        <span><strong>✓✓</strong> Pursue</span>
+        <span><strong>✓</strong> Selective</span>
+        <span><strong>—</strong> Hold / avoid</span>
+        <span><strong style="color: var(--tlv-danger);">⛔</strong> Eligible by stage but gate failed</span>
+      </div>
+    </div>
+
+    <!-- 2x2 + scores -->
+    <div class="card">
+      <h2>Roots × Relatedness</h2>
+      <div class="card-subtitle">Strategic fit per TLV's 2×2 framework. The dot is this company's plotted position; gold outline = matched quadrant.</div>
+
+      <div class="quad-section">
+        <div class="quad-frame">
+          <div class="quad-y-label"><span>TULSA RELATEDNESS →</span></div>
+          <div class="quad-container" id="quad">
+            <div class="quad-cell q-import" data-quad="import">
+              <div class="q-title">Import Opportunity</div>
+              <div class="q-desc">Low Roots · High Relatedness</div>
+            </div>
+            <div class="quad-cell q-strong" data-quad="strong">
+              <div class="q-title">⭐ Strong Fit</div>
+              <div class="q-desc">High Roots · High Relatedness</div>
+            </div>
+            <div class="quad-cell q-avoid" data-quad="avoid">
+              <div class="q-title">Adverse Selection</div>
+              <div class="q-desc">Low Roots · Low Relatedness</div>
+            </div>
+            <div class="quad-cell q-diversify" data-quad="diversify">
+              <div class="q-title">Diversification</div>
+              <div class="q-desc">High Roots · Low Relatedness</div>
+            </div>
+            <div class="quad-dot" id="quad_dot" style="display:none;"></div>
+          </div>
+          <div class="quad-x-label">TULSA ROOTS →</div>
+        </div>
+      </div>
+
+      <div class="scores">
+        <div class="score-row">
+          <div class="score-label">Roots</div>
+          <div class="score-bar"><div id="roots_fill" class="score-fill"></div></div>
+          <div class="score-value"><span id="roots_val">0</span><small>/10</small></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">Relatedness</div>
+          <div class="score-bar"><div id="rel_fill" class="score-fill"></div></div>
+          <div class="score-value"><span id="rel_val">0</span><small>/10</small></div>
+        </div>
+      </div>
+      <div class="quadrant-label" id="quad_label" style="display:none;"></div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card">
+      <h2>Recommendation</h2>
+      <div class="card-subtitle">Eligible buckets for this stage, filtered by lead-investor gate and sector exclusions.</div>
+      <div id="recs_grid" class="recs-grid">
+        <div class="empty">Fill in the form to see recommendations…</div>
+      </div>
+      <div id="flags" class="flags" style="display:none;">
+        <div class="flags-title">Flags &amp; considerations</div>
+        <ul id="flags_list"></ul>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ===========================================================
+   TLV Investment Triage — Decision Logic
+   No LP commitments / no fund-of-funds in this tree.
+   =========================================================== */
+
+const STAGE_MATRIX = {
+  preseed:  { programming: 'pursue',    grants: 'pursue',    incentives: 'hold',      loans: 'pursue',    equity: 'hold'      },
+  seed:     { programming: 'pursue',    grants: 'pursue',    incentives: 'hold',      loans: 'selective', equity: 'selective' },
+  seriesA:  { programming: 'selective', grants: 'selective', incentives: 'selective', loans: 'selective', equity: 'pursue'    },
+  seriesB:  { programming: 'selective', grants: 'selective', incentives: 'selective', loans: 'selective', equity: 'pursue'    },
+  growth:   { programming: 'hold',      grants: 'hold',      incentives: 'pursue',    loans: 'pursue',    equity: 'selective' }
+};
+
+const BUCKETS = [
+  { key: 'programming', label: 'Programming',       desc: 'Ecosystem support: 36 Degrees North, Build in Tulsa, TIL, LatAm2Tulsa, post-accelerator support, diaspora network.' },
+  { key: 'grants',      label: 'Grants',            desc: 'R&D grants, SBIR/NSF/OCAST grant-matching, Tulsa-benefit milestone grants.' },
+  { key: 'incentives',  label: 'Incentives',        desc: 'Relocation/expansion incentives via OK Dept of Commerce, Chamber, City; talent recruitment subsidies.' },
+  { key: 'loans',       label: 'Loans',             desc: 'TBFP-style non-dilutive revenue participation; bridge facilities.' },
+  { key: 'equity',      label: 'Direct Investment', desc: 'Equity / SAFE alongside a 3rd-party lead; milestone-gated tranches available.' }
+];
+
+const STAGE_INFO = {
+  preseed: { label: "Pre-Seed",    tag: "Enable, Don't Invest",  size: "$100K–$300K" },
+  seed:    { label: "Seed",        tag: "Catalyze & Capture",    size: "$500K–$1M"   },
+  seriesA: { label: "Series A/B",  tag: "Lean Local Success",    size: "$1M–$3M"     },
+  growth:  { label: "Growth (C+)", tag: "Opportunistic",         size: "$3M+"        }
+};
+
+const QUAD_LABELS = {
+  strong:    { name: 'Strong Fit',                  note: 'High Roots × High Relatedness — bullseye for TLV deployment.' },
+  import:    { name: 'Import Opportunity',          note: 'Low Roots × High Relatedness — anchor in Tulsa via incentives + programming.' },
+  diversify: { name: 'Diversification Potential',   note: 'High Roots × Low Relatedness — pursue if creating durable Tulsa jobs.' },
+  avoid:     { name: 'Adverse Selection Risk',      note: 'Low Roots × Low Relatedness — decline or programming-only.' }
+};
+
+const RELATEDNESS_SECTORS = ['b2b_saas','energy','manufacturing','health','ai','fintech'];
+const EXCLUDED_SECTORS = ['cannabis','gambling','firearms','adult'];
+
+function getMatrixStage(s) {
+  if (s === 'seriesA' || s === 'seriesB') return 'seriesA';
+  return s;
+}
+
+/* -------- Read form -------- */
+function readForm() {
+  return {
+    company_name:     document.getElementById('company_name').value.trim(),
+    sector:           document.getElementById('sector').value,
+    is_public:        document.querySelector('input[name="public"]:checked')?.value === 'yes',
+    is_pe:            document.querySelector('input[name="pe"]:checked')?.value === 'yes',
+    stage:            document.getElementById('stage').value,
+    round_size:       +document.getElementById('round_size').value || 0,
+    valuation:        +document.getElementById('valuation').value || 0,
+    hq_location:      document.getElementById('hq_location').value,
+    founder_location: document.getElementById('founder_location').value,
+    tulsa_emp:        +document.getElementById('tulsa_emp').value || 0,
+    total_emp:        +document.getElementById('total_emp').value || 0,
+    planned_hires:    +document.getElementById('planned_hires').value || 0,
+    years_tulsa:      +document.getElementById('years_tulsa').value || 0,
+    relocating:       document.querySelector('input[name="reloc"]:checked')?.value === 'yes',
+    avg_salary:       +document.getElementById('avg_salary').value || 0,
+    lead_identified:  document.querySelector('input[name="lead"]:checked')?.value === 'yes',
+    lead_type:        document.getElementById('lead_type').value,
+    term_sheet:       document.querySelector('input[name="termsheet"]:checked')?.value === 'yes'
+  };
+}
+
+/* -------- Scoring -------- */
+function scoreRoots(d) {
+  let s = 0;
+  if (d.hq_location === 'tulsa') s += 3;
+  else if (d.hq_location === 'oklahoma') s += 1;
+  if (d.founder_location === 'tulsa') s += 2;
+  else if (d.founder_location === 'oklahoma') s += 1;
+  if (d.total_emp > 0) {
+    const pct = d.tulsa_emp / d.total_emp;
+    if (pct >= 0.5) s += 2;
+    else if (pct >= 0.25) s += 1;
+  }
+  if (d.tulsa_emp >= 26) s += 3;
+  else if (d.tulsa_emp >= 11) s += 2;
+  else if (d.tulsa_emp >= 5) s += 1;
+  if (d.years_tulsa >= 2) s += 1;
+  if (d.relocating && d.hq_location !== 'tulsa') s += 2;
+  return Math.min(s, 10);
+}
+
+function scoreRelatedness(d) {
+  let s = 0;
+  if (RELATEDNESS_SECTORS.includes(d.sector)) s += 5;
+  if (d.avg_salary >= 80000) s += 3;
+  else if (d.avg_salary >= 60000) s += 2;
+  if (d.planned_hires >= 10) s += 2;
+  else if (d.planned_hires >= 5) s += 1;
+  return Math.min(s, 10);
+}
+
+function getQuadrant(roots, rel) {
+  const hr = roots >= 5;
+  const hRel = rel >= 5;
+  if (hr && hRel) return 'strong';
+  if (!hr && hRel) return 'import';
+  if (hr && !hRel) return 'diversify';
+  return 'avoid';
+}
+
+/* -------- DQ -------- */
+function checkDQ(d) {
+  if (d.is_public) return 'Public companies are out of TLV scope.';
+  if (d.is_pe) return 'Traditional PE / buyout deals are out of TLV scope — a separate framework applies.';
+  if (EXCLUDED_SECTORS.includes(d.sector)) return `Sector "${d.sector}" is on TLV's exclusion list (cannabis, gambling, firearms, adult content).`;
+  return null;
+}
+
+function equityGateOpen(d) {
+  return d.lead_identified &&
+         d.term_sheet &&
+         (d.lead_type === 'angel' || d.lead_type === 'vc' || d.lead_type === 'strategic');
+}
+
+/* ===========================================================
+   MERMAID TREE
+   Flow: Company → Stage → [4 stage nodes] → 5 buckets → Gate (for equity)
+   =========================================================== */
+
+function escapeMmd(s) {
+  return String(s).replace(/"/g, "'").replace(/\n/g, ' ');
+}
+
+function buildTreeDiagram(d) {
+  const dqReason = checkDQ(d);
+  const activeStage = getMatrixStage(d.stage);
+  const gateOpen = equityGateOpen(d);
+  const companyName = escapeMmd(d.company_name || 'Company');
+
+  const L = ['flowchart TB'];
+  L.push(`  start(["${companyName}"])`);
+
+  if (dqReason) {
+    const reasons = [];
+    if (d.is_public) reasons.push('Public co.');
+    if (d.is_pe) reasons.push('PE / Buyout');
+    if (EXCLUDED_SECTORS.includes(d.sector)) reasons.push('Excluded sector');
+    L.push(`  reject["⛔ Out of Scope<br/>${escapeMmd(reasons.join(' + '))}"]`);
+    L.push(`  start --> reject`);
+    L.push('');
+    L.push('  classDef active fill:#0d2340,stroke:#f0b323,stroke-width:3px,color:#fff;');
+    L.push('  classDef reject fill:#c62828,color:#fff,stroke:#7a1212,stroke-width:2px;');
+    L.push(`  class start active;`);
+    L.push(`  class reject reject;`);
+    return L.join('\n');
+  }
+
+  // Happy path: stage selector → all 4 stages → buckets for active
+  L.push(`  stage{{"Stage"}}`);
+  L.push(`  start --> stage`);
+
+  Object.entries(STAGE_INFO).forEach(([key, info]) => {
+    L.push(`  s_${key}["${info.label}<br/>${info.size}<br/><i>${info.tag}</i>"]`);
+    L.push(`  stage --> s_${key}`);
+  });
+
+  if (activeStage) {
+    BUCKETS.forEach(b => {
+      const status = STAGE_MATRIX[activeStage][b.key];
+      const icon = status === 'pursue' ? '✓✓' : status === 'selective' ? '✓' : '—';
+      const verb = status === 'pursue' ? 'Pursue' : status === 'selective' ? 'Selective' : 'Hold';
+      L.push(`  b_${b.key}["${b.label}<br/>${icon} ${verb}"]`);
+      L.push(`  s_${activeStage} --> b_${b.key}`);
+    });
+
+    if (STAGE_MATRIX[activeStage].equity !== 'hold') {
+      L.push(`  gate{{"3rd-party lead<br/>+ term sheet?"}}`);
+      L.push(`  b_equity --> gate`);
+      if (gateOpen) {
+        L.push(`  eqOK["✅ Direct Investment<br/>ELIGIBLE"]`);
+        L.push(`  gate --> eqOK`);
+      } else {
+        L.push(`  eqFail["⛔ Direct Investment<br/>GATE FAILED"]`);
+        L.push(`  gate --> eqFail`);
+      }
+    }
+  }
+
+  L.push('');
+  L.push('  classDef active fill:#0d2340,stroke:#f0b323,stroke-width:3px,color:#fff;');
+  L.push('  classDef pursue fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff;');
+  L.push('  classDef selective fill:#b25d04,stroke:#7a3f02,color:#fff;');
+  L.push('  classDef hold fill:#fff,stroke:#cbd2d9,stroke-dasharray:4 3,color:#7b8794;');
+  L.push('  classDef inactive fill:#f8f9fa,stroke:#e4e7eb,color:#cbd2d9,stroke-dasharray:3 3;');
+  L.push('  classDef reject fill:#c62828,color:#fff,stroke:#7a1212,stroke-width:2px;');
+  L.push('  classDef gate fill:#fde9b3,stroke:#f0b323,stroke-width:2px,color:#0d2340;');
+
+  L.push(`  class start active;`);
+  L.push(`  class stage ${activeStage ? 'active' : 'inactive'};`);
+  Object.keys(STAGE_INFO).forEach(k => {
+    L.push(`  class s_${k} ${k === activeStage ? 'active' : 'inactive'};`);
+  });
+
+  if (activeStage) {
+    BUCKETS.forEach(b => {
+      const status = STAGE_MATRIX[activeStage][b.key];
+      const cls = status === 'pursue' ? 'pursue' : status === 'selective' ? 'selective' : 'hold';
+      L.push(`  class b_${b.key} ${cls};`);
+    });
+
+    if (STAGE_MATRIX[activeStage].equity !== 'hold') {
+      L.push(`  class gate gate;`);
+      if (gateOpen) L.push(`  class eqOK pursue;`);
+      else L.push(`  class eqFail reject;`);
+    }
+  }
+
+  return L.join('\n');
+}
+
+let renderToken = 0;
+async function renderTree(d) {
+  if (typeof mermaid === 'undefined') {
+    document.getElementById('tree').innerHTML = '<div class="tree-empty">Mermaid library not loaded (check internet connection).</div>';
+    return;
+  }
+  if (!d.stage && !checkDQ(d)) {
+    document.getElementById('tree').innerHTML = '<div class="tree-empty">Pick a stage to render the decision path…</div>';
+    return;
+  }
+  const myToken = ++renderToken;
+  const diagram = buildTreeDiagram(d);
+  try {
+    const { svg } = await mermaid.render('mtree_' + myToken, diagram);
+    if (myToken === renderToken) {
+      document.getElementById('tree').innerHTML = svg;
+    }
+  } catch (e) {
+    if (myToken === renderToken) {
+      document.getElementById('tree').innerHTML = '<div class="tree-empty" style="color: var(--tlv-danger);">Tree render error: ' + (e.message || e) + '</div>';
+      console.error('Mermaid error:', e, '\nDiagram:\n', diagram);
+    }
+  }
+}
+
+/* ===========================================================
+   RENDER: Matrix
+   =========================================================== */
+function renderMatrix(d) {
+  const tbody = document.getElementById('matrix_body');
+  tbody.innerHTML = '';
+  const activeStage = getMatrixStage(d.stage);
+  const gateOpen = equityGateOpen(d);
+
+  document.querySelectorAll('#matrix thead th').forEach(th => {
+    th.classList.remove('col-active');
+    if (th.dataset.stage === activeStage) th.classList.add('col-active');
+  });
+
+  BUCKETS.forEach(b => {
+    const tr = document.createElement('tr');
+    const td0 = document.createElement('td');
+    td0.className = 'row-label';
+    td0.textContent = b.label;
+    tr.appendChild(td0);
+
+    ['preseed','seed','seriesA','growth'].forEach(stageKey => {
+      const td = document.createElement('td');
+      const status = STAGE_MATRIX[stageKey][b.key];
+
+      if (b.key === 'equity' && stageKey === activeStage && status !== 'hold' && !gateOpen && (d.lead_identified || d.term_sheet || d.lead_type !== 'none')) {
+        td.classList.add('gate-failed');
+        td.innerHTML = '⛔';
+        td.title = 'Equity requires a 3rd-party lead doing real diligence + writing a term sheet.';
+      } else if (status === 'pursue') {
+        td.classList.add('cell-pursue');
+        td.innerHTML = '✓✓';
+      } else if (status === 'selective') {
+        td.classList.add('cell-selective');
+        td.innerHTML = '✓';
+      } else {
+        td.classList.add('cell-hold');
+        td.innerHTML = '—';
+      }
+
+      if (stageKey === activeStage) td.classList.add('col-active');
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+/* ===========================================================
+   RENDER: 2x2
+   =========================================================== */
+function render2x2(d, roots, rel) {
+  const dot = document.getElementById('quad_dot');
+  const labelDiv = document.getElementById('quad_label');
+  const hasMinData = d.stage && (d.hq_location || d.founder_location || d.sector);
+
+  if (!hasMinData) {
+    dot.style.display = 'none';
+    labelDiv.style.display = 'none';
+    document.querySelectorAll('#quad .quad-cell').forEach(c => c.classList.remove('active'));
+  } else {
+    dot.style.display = 'block';
+    const x = (roots / 10) * 100;
+    const y = 100 - ((rel / 10) * 100);
+    dot.style.left = x + '%';
+    dot.style.top  = y + '%';
+    const q = getQuadrant(roots, rel);
+    document.querySelectorAll('#quad .quad-cell').forEach(c => {
+      c.classList.toggle('active', c.dataset.quad === q);
+    });
+    labelDiv.style.display = 'block';
+    labelDiv.innerHTML = `<strong>${QUAD_LABELS[q].name}</strong> — ${QUAD_LABELS[q].note}`;
+  }
+
+  const rootsFill = document.getElementById('roots_fill');
+  const relFill   = document.getElementById('rel_fill');
+  rootsFill.style.width = (roots * 10) + '%';
+  relFill.style.width   = (rel * 10) + '%';
+  rootsFill.className = 'score-fill ' + (roots >= 5 ? 'high' : (roots > 0 ? 'low' : ''));
+  relFill.className   = 'score-fill ' + (rel   >= 5 ? 'high' : (rel   > 0 ? 'low' : ''));
+  document.getElementById('roots_val').textContent = roots;
+  document.getElementById('rel_val').textContent   = rel;
+}
+
+/* ===========================================================
+   RENDER: Recommendations + flags
+   =========================================================== */
+function renderRecs(d, dqReason, roots, rel) {
+  const grid = document.getElementById('recs_grid');
+  const flagsDiv = document.getElementById('flags');
+  const flagsList = document.getElementById('flags_list');
+
+  if (dqReason) {
+    grid.innerHTML = '<div class="empty">Out of scope — see banner above.</div>';
+    flagsDiv.style.display = 'none';
+    return;
+  }
+  if (!d.stage) {
+    grid.innerHTML = '<div class="empty">Select a stage to see recommendations…</div>';
+    flagsDiv.style.display = 'none';
+    return;
+  }
+
+  const activeStage = getMatrixStage(d.stage);
+  const gateOpen = equityGateOpen(d);
+
+  const eligible = BUCKETS.map(b => {
+    const status = STAGE_MATRIX[activeStage][b.key];
+    const gateFailed = (b.key === 'equity' && status !== 'hold' && !gateOpen);
+    return { ...b, status, gateFailed };
+  });
+
+  const rank = it => it.gateFailed ? 3 : (it.status === 'pursue' ? 1 : it.status === 'selective' ? 2 : 4);
+  eligible.sort((a,b) => rank(a) - rank(b));
+
+  grid.innerHTML = '';
+  eligible.forEach(it => {
+    const card = document.createElement('div');
+    let cls = 'status-' + it.status;
+    if (it.gateFailed) cls = 'status-gate';
+    card.className = 'rec-card ' + cls;
+    let label, icon;
+    if (it.gateFailed) { label = 'Gate failed'; icon = '⛔'; }
+    else if (it.status === 'pursue')    { label = 'Pursue';        icon = '✓✓'; }
+    else if (it.status === 'selective') { label = 'Selective';     icon = '✓'; }
+    else                                { label = 'Hold / avoid';  icon = '—'; }
+    card.innerHTML = `
+      <h4>${it.label}</h4>
+      <div class="rec-status">${icon} &nbsp; ${label}</div>
+      <div class="rec-detail">${it.desc}</div>
+      ${it.gateFailed ? '<div class="gate-note">Direct investment requires a 3rd-party lead (sophisticated angel or VC fund) doing real diligence and writing a term sheet.</div>' : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  const flags = [];
+  const q = getQuadrant(roots, rel);
+  if (q === 'avoid') flags.push('⚠️ <strong>Adverse selection risk</strong> — low Tulsa roots + low sector relatedness. Default to decline or programming-only support unless there is exceptional rationale.');
+  else if (q === 'strong')    flags.push('⭐ <strong>Strong fit</strong> — high roots, high relatedness. Bullseye for TLV deployment.');
+  else if (q === 'import')    flags.push('📥 <strong>Import opportunity</strong> — low roots but high relatedness. Anchor in Tulsa via relocation incentives + programming before deeper capital.');
+  else if (q === 'diversify') flags.push('🌱 <strong>Economic diversification</strong> — strong Tulsa roots, sector outside the relatedness map. Pursue if creating durable Tulsa jobs.');
+
+  if (d.avg_salary > 0 && d.avg_salary < 80000) flags.push(`💰 Avg salary <strong>$${d.avg_salary.toLocaleString()}</strong> is below TLV's $80K/yr quality target — flag for IC discussion.`);
+  if (d.avg_salary === 0 && d.stage) flags.push('💰 Salary data not provided — required for EIR (Employment Impact Return) computation and IC review.');
+
+  if (d.total_emp > 0 && d.tulsa_emp / d.total_emp < 0.3 && d.hq_location === 'tulsa') flags.push('🏢 HQ is Tulsa but <30% of employees are in Tulsa — risk that the HQ is nominal rather than substantive.');
+
+  if (d.stage === 'preseed' && d.round_size > 500000) flags.push('📐 Round size > $500K is large for Pre-Seed — confirm stage classification.');
+  if (d.stage === 'seed' && d.round_size > 5000000) flags.push('📐 Round size > $5M is large for Seed — likely a seed extension or early Series A.');
+
+  if (d.stage === 'growth' && gateOpen) flags.push('💼 Growth-stage equity is "Selective" — lean toward incentives + loans. Direct investment needs a strong Tulsa job-creation case.');
+  if (d.lead_identified && !d.term_sheet) flags.push('📝 Lead investor identified but term sheet not yet written — equity gate remains closed until term sheet is in hand.');
+  if (d.lead_identified && d.lead_type === 'other') flags.push('📝 Lead investor type is "Other (unsophisticated)" — does not satisfy TLV\'s 3rd-party lead requirement.');
+
+  if (d.stage && !d.hq_location)      flags.push('📍 HQ location not specified — required for full assessment.');
+  if (d.stage && !d.founder_location) flags.push('👤 Founder location not specified — affects Roots scoring.');
+
+  if (flags.length > 0) {
+    flagsList.innerHTML = flags.map(f => `<li>${f}</li>`).join('');
+    flagsDiv.style.display = 'block';
+  } else {
+    flagsDiv.style.display = 'none';
+  }
+}
+
+/* ===========================================================
+   MAIN UPDATE
+   =========================================================== */
+function update() {
+  const d = readForm();
+  const dqReason = checkDQ(d);
+
+  const dqBanner = document.getElementById('dq_banner');
+  if (dqReason) {
+    dqBanner.style.display = 'block';
+    document.getElementById('dq_reason').textContent = dqReason;
+  } else {
+    dqBanner.style.display = 'none';
+  }
+
+  const roots = scoreRoots(d);
+  const rel   = scoreRelatedness(d);
+
+  renderMatrix(d);
+  render2x2(d, roots, rel);
+  renderRecs(d, dqReason, roots, rel);
+  renderTree(d);
+}
+
+/* ---- Reset / export / presets ---- */
+function resetForm() {
+  document.querySelectorAll('input, select').forEach(el => {
+    if (el.type === 'radio') {
+      el.checked = el.id.endsWith('_no');
+    } else if (el.type === 'number' || el.type === 'text') {
+      el.value = '';
+    } else if (el.tagName === 'SELECT') {
+      el.selectedIndex = 0;
+    }
+  });
+  update();
+}
+
+function exportJSON() {
+  const d = readForm();
+  const roots = scoreRoots(d);
+  const rel = scoreRelatedness(d);
+  const q = getQuadrant(roots, rel);
+  const out = {
+    timestamp: new Date().toISOString(),
+    inputs: d,
+    scores: { roots, relatedness: rel, quadrant: q },
+    dq_reason: checkDQ(d),
+    equity_gate_open: equityGateOpen(d)
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (d.company_name || 'tlv_triage').replace(/[^a-z0-9]/gi,'_').toLowerCase() + '_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+const PRESETS = {
+  dockware: {
+    company_name: 'Dockware', sector: 'b2b_saas',
+    public: 'no', pe: 'no',
+    stage: 'seed', round_size: 7500000, valuation: 0,
+    hq_location: 'tulsa', founder_location: 'tulsa',
+    tulsa_emp: 12, total_emp: 12, planned_hires: 8, years_tulsa: 1,
+    reloc: 'no', avg_salary: 95000,
+    lead: 'yes', lead_type: 'vc', termsheet: 'yes'
+  },
+  crusoe: {
+    company_name: 'Crusoe', sector: 'energy',
+    public: 'no', pe: 'no',
+    stage: 'growth', round_size: 100000000, valuation: 0,
+    hq_location: 'us', founder_location: 'us',
+    tulsa_emp: 0, total_emp: 600, planned_hires: 500, years_tulsa: 0,
+    reloc: 'yes', avg_salary: 110000,
+    lead: 'yes', lead_type: 'vc', termsheet: 'yes'
+  },
+  medefy: {
+    company_name: 'Medefy', sector: 'health',
+    public: 'no', pe: 'no',
+    stage: 'seriesA', round_size: 8000000, valuation: 53000000,
+    hq_location: 'tulsa', founder_location: 'tulsa',
+    tulsa_emp: 43, total_emp: 78, planned_hires: 20, years_tulsa: 5,
+    reloc: 'no', avg_salary: 82000,
+    lead: 'yes', lead_type: 'vc', termsheet: 'yes'
+  },
+  thistle: {
+    company_name: 'Thistle (illustrative)', sector: 'consumer',
+    public: 'no', pe: 'no',
+    stage: 'seriesA', round_size: 2000000, valuation: 15000000,
+    hq_location: 'us', founder_location: 'us',
+    tulsa_emp: 0, total_emp: 30, planned_hires: 0, years_tulsa: 0,
+    reloc: 'no', avg_salary: 55000,
+    lead: 'no', lead_type: 'none', termsheet: 'no'
+  }
+};
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  document.getElementById('company_name').value = p.company_name;
+  document.getElementById('sector').value = p.sector;
+  document.getElementById('stage').value = p.stage;
+  document.getElementById('round_size').value = p.round_size || '';
+  document.getElementById('valuation').value = p.valuation || '';
+  document.getElementById('hq_location').value = p.hq_location;
+  document.getElementById('founder_location').value = p.founder_location;
+  document.getElementById('tulsa_emp').value = p.tulsa_emp || '';
+  document.getElementById('total_emp').value = p.total_emp || '';
+  document.getElementById('planned_hires').value = p.planned_hires || '';
+  document.getElementById('years_tulsa').value = p.years_tulsa || '';
+  document.getElementById('avg_salary').value = p.avg_salary || '';
+  document.getElementById('lead_type').value = p.lead_type;
+  document.getElementById('public_' + p.public).checked = true;
+  document.getElementById('pe_' + p.pe).checked = true;
+  document.getElementById('reloc_' + p.reloc).checked = true;
+  document.getElementById('lead_' + p.lead).checked = true;
+  document.getElementById('ts_' + p.termsheet).checked = true;
+  update();
+}
+
+/* ---- Wire-up + Mermaid init ---- */
+if (typeof mermaid !== 'undefined') {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#0d2340',
+      primaryBorderColor: '#cbd2d9',
+      lineColor: '#7b8794',
+      secondaryColor: '#f1f3f5',
+      tertiaryColor: '#f8f9fa',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: '13px'
+    },
+    flowchart: { curve: 'basis', padding: 10, nodeSpacing: 35, rankSpacing: 45, htmlLabels: true }
+  });
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', update);
+  el.addEventListener('change', update);
+});
+
+update();
+</script>
+
+</body>
+</html>
