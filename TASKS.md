@@ -3,20 +3,21 @@
 ## Active Workstreams
 
 ### Phase 2 — Centralization (Current)
-- [ ] Create briggsly/tlv GitHub repo
-- [ ] Populate project workstream files (projects/)
+- [x] ~~Create briggsly/tlv GitHub repo~~ (already exists)
+- [x] ~~Populate project workstream files (projects/)~~ (latam-to-tulsa.md, economic-development.md, portfolio.md exist)
+- [x] ~~Build per-company briefs for 17 portfolio companies~~ (projects/portfolio-companies/*.md — 2026-08-31)
 - [ ] Set up canonical GitHub issue backlog
-- [ ] Register TLV Weekly Ops cron job
+- [x] ~~Register TLV Weekly Ops cron job~~ (47d4aeb8807a — runs Mon 09:00 CDT)
 - [ ] Integrate existing tools into docs/tools/
 
-### Portfolio Operations
-- [ ] Build per-company briefs for 17 portfolio companies
+### Portfolio Enrichment (Next)
+- [ ] Enrich company briefs with descriptions from investment memos
 - [ ] Create VC fund allocation rollup
 - [ ] Catalog Investment Committee materials
 - [ ] Index active term sheets and convertible notes
 
 ### Latam to Tulsa
-- [ ] Document founder onboarding funnel
+- [x] ~~Document founder onboarding funnel~~ (projects/latam-to-tulsa/Latam-to-Tulsa-Onboarding-Funnel.md — 2026-09-15)
 - [ ] Track active founder pipeline
 - [ ] Maintain visa process reference
 - [ ] Program calendar and events tracking
